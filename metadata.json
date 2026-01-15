@@ -1,0 +1,5 @@
+{
+  "name": "My AI Movie Review",
+  "description": "A sophisticated AI-powered movie and TV review platform that automatically generates humorous reviews, features a lottery-style picker, and tracks your watchlist across devices.",
+  "requestFramePermissions": []
+}
