@@ -14,93 +14,126 @@ import {
   Plus, Check, LogOut, Settings as SettingsIcon, 
   Play, RefreshCw, Loader2, Heart, X, Trash2, Edit2, ChevronLeft,
   Share2, Facebook, Twitter, Link as LinkIcon, Save,
-  UserCircle, Calendar, ChevronRight, Lock
+  UserCircle, Calendar, ChevronRight, Lock, Eye, EyeOff, Key, AlertCircle
 } from 'lucide-react';
 
 const ADMIN_PAGE_SIZE = 10;
 
-// Sub-component for Admin Settings - Moved outside to prevent focus reset
-const AdminSettings = ({ buffer, setBuffer, t, onSave, adminPass, setAdminPass }: any) => (
-  <section className="bg-white p-6 sm:p-8 border wp-shadow rounded-sm space-y-6 md:col-span-2">
-    <div className="flex justify-between items-center">
-      <h3 className="text-xl font-bold flex items-center font-serif text-blue-600"><SettingsIcon className="mr-2" /> {t.siteSettings}</h3>
-      <button onClick={onSave} className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest flex items-center hover:bg-blue-700 shadow-md transition-transform active:scale-95">
-        <Save size={14} className="mr-2" /> {t.save}
-      </button>
-    </div>
-    
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <div className="space-y-1">
-        <label className="text-[10px] font-black uppercase text-gray-400">{t.siteNameLabel}</label>
-        <input 
-          value={buffer.siteName} 
-          onChange={e => setBuffer({...buffer, siteName: e.target.value})} 
-          className="w-full p-2.5 border rounded outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" 
-        />
+// Sub-component for Admin Settings
+const AdminSettings = ({ buffer, setBuffer, t, onSave, adminPass, setAdminPass, onConnectAI }: any) => {
+  const [showPass, setShowPass] = useState(false);
+  const [hasAIKey, setHasAIKey] = useState(false);
+
+  useEffect(() => {
+    // Check if AI key is selected on mount
+    const checkKey = async () => {
+      if (window.aistudio?.hasSelectedApiKey) {
+        const has = await window.aistudio.hasSelectedApiKey();
+        setHasAIKey(has);
+      }
+    };
+    checkKey();
+  }, []);
+  
+  return (
+    <section className="bg-white p-6 sm:p-8 border wp-shadow rounded-sm space-y-6 md:col-span-2">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-bold flex items-center font-serif text-blue-600">
+          <SettingsIcon className="mr-2" /> {t.siteSettings}
+        </h3>
+        <button 
+          onClick={onSave} 
+          className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest flex items-center hover:bg-blue-700 shadow-md transition-transform active:scale-95"
+        >
+          <Save size={14} className="mr-2" /> {t.save}
+        </button>
       </div>
-      <div className="space-y-1">
-        <label className="text-[10px] font-black uppercase text-gray-400">TMDB API KEY</label>
-        <input 
-          value={buffer.tmdbApiKey} 
-          type="password" 
-          onChange={e => setBuffer({...buffer, tmdbApiKey: e.target.value})} 
-          className="w-full p-2.5 border rounded font-mono outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" 
-        />
-      </div>
-      <div className="space-y-1">
-        <label className="text-[10px] font-black uppercase text-gray-400">Admin Password</label>
-        <div className="relative">
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase text-gray-400">{t.siteNameLabel}</label>
           <input 
-            value={adminPass} 
-            type="text" 
-            onChange={e => setAdminPass(e.target.value)} 
-            className="w-full p-2.5 pl-9 border rounded font-mono outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" 
+            value={buffer.siteName} 
+            onChange={e => setBuffer({...buffer, siteName: e.target.value})} 
+            className="w-full p-2.5 border rounded outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" 
           />
-          <Lock className="absolute left-3 top-3 text-gray-300" size={16} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase text-gray-400">TMDB API KEY</label>
+          <input 
+            value={buffer.tmdbApiKey} 
+            type="password" 
+            onChange={e => setBuffer({...buffer, tmdbApiKey: e.target.value})} 
+            className="w-full p-2.5 border rounded font-mono outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" 
+            placeholder="Paste TMDB Key"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase text-gray-400">Admin Password</label>
+          <div className="relative">
+            <input 
+              value={adminPass} 
+              type={showPass ? "text" : "password"} 
+              onChange={e => setAdminPass(e.target.value)} 
+              className="w-full p-2.5 pl-9 border rounded font-mono outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" 
+            />
+            <Lock className="absolute left-3 top-3 text-gray-300" size={16} />
+            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-3 text-gray-400 hover:text-blue-600">
+              {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase text-gray-400">Gemini AI Status</label>
+          <div className="flex flex-col gap-2">
+            <button 
+              onClick={onConnectAI}
+              className={`flex items-center justify-center p-2.5 border rounded font-bold text-xs uppercase transition-all ${hasAIKey ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200 animate-pulse'}`}
+            >
+              <Key size={14} className="mr-2" />
+              {hasAIKey ? 'AI Connected' : 'Connect Gemini AI Key'}
+            </button>
+            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-[8px] text-gray-400 hover:underline">
+              Important: Use a paid GCP project key. Click for billing docs.
+            </a>
+          </div>
         </div>
       </div>
-      <div className="space-y-1">
-        <label className="text-[10px] font-black uppercase text-gray-400">Daily Update Time</label>
-        <input 
-          type="time" 
-          value={buffer.updateTime} 
-          onChange={e => setBuffer({...buffer, updateTime: e.target.value})} 
-          className="w-full p-2.5 border rounded outline-none bg-white text-gray-900 border-gray-200" 
-        />
-      </div>
-    </div>
 
-    <div className="border-t pt-6 space-y-6">
-      <h4 className="text-sm font-bold uppercase tracking-widest text-gray-500 flex items-center"><UserCircle size={18} className="mr-2"/> {t.authorNameLabel}</h4>
-      <div className="grid grid-cols-1 gap-4">
-        {buffer.authors.map((author: any, idx: number) => (
-          <div key={idx} className={`p-5 rounded-xl border transition-all ${buffer.activeAuthorIndex === idx ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600' : 'bg-gray-50 border-gray-100'}`}>
-            <div className="flex items-center space-x-3 mb-4">
-              <input type="radio" checked={buffer.activeAuthorIndex === idx} onChange={() => setBuffer({...buffer, activeAuthorIndex: idx})} className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-black uppercase text-gray-700 tracking-wider">{t.authorStyle}: {t[author.style]}</span>
+      <div className="border-t pt-6 space-y-6">
+        <h4 className="text-sm font-bold uppercase tracking-widest text-gray-500 flex items-center">
+          <UserCircle size={18} className="mr-2"/> AI Personas
+        </h4>
+        <div className="grid grid-cols-1 gap-4">
+          {buffer.authors.map((author: any, idx: number) => (
+            <div key={idx} className={`p-5 rounded-xl border transition-all ${buffer.activeAuthorIndex === idx ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600' : 'bg-gray-50 border-gray-100'}`}>
+              <div className="flex items-center space-x-3 mb-4">
+                <input type="radio" checked={buffer.activeAuthorIndex === idx} onChange={() => setBuffer({...buffer, activeAuthorIndex: idx})} className="w-4 h-4 text-blue-600" />
+                <span className="text-xs font-black uppercase text-gray-700 tracking-wider">Style: {t[author.style]}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {(['en', 'zh-TW', 'zh-CN'] as Language[]).map((l) => (
+                  <div key={l} className="space-y-1">
+                    <label className="text-[8px] font-black text-gray-400 uppercase">{l}</label>
+                    <input 
+                      value={author.name[l]} 
+                      onChange={e => {
+                        const authors = [...buffer.authors];
+                        authors[idx] = { ...authors[idx], name: { ...authors[idx].name, [l]: e.target.value } };
+                        setBuffer({ ...buffer, authors });
+                      }}
+                      className="w-full p-2 border rounded text-xs outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {(['en', 'zh-TW', 'zh-CN'] as Language[]).map((l) => (
-                <div key={l}>
-                  <label className="text-[8px] font-black text-gray-400 uppercase mb-1 block">{l}</label>
-                  <input 
-                    value={author.name[l]} 
-                    onChange={e => {
-                      const authors = [...buffer.authors];
-                      authors[idx] = { ...authors[idx], name: { ...authors[idx].name, [l]: e.target.value } };
-                      setBuffer({ ...buffer, authors });
-                    }}
-                    className="w-full p-2 border rounded text-xs outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>('en');
@@ -125,40 +158,33 @@ const App: React.FC = () => {
 
   const t = TRANSLATIONS[lang];
 
-  useEffect(() => {
-    const checkAutoUpdate = async () => {
-      if (!config.tmdbApiKey) return;
-      const now = new Date();
-      const lastUpdate = new Date(config.lastUpdateDate);
-      if (now.toDateString() !== lastUpdate.toDateString()) {
-        const [targetH, targetM] = config.updateTime.split(':').map(Number);
-        if (now.getHours() > targetH || (now.getHours() === targetH && now.getMinutes() >= targetM)) {
-          const typeToGen = now.getDate() % 2 === 0 ? MediaType.TV : MediaType.MOVIE;
-          await autoGenerateReview(typeToGen);
-          const newConfig = { ...config, lastUpdateDate: now.toISOString() };
-          setConfig(newConfig);
-          storage.setConfig(newConfig);
-        }
-      }
-    };
-    checkAutoUpdate();
-    const interval = setInterval(checkAutoUpdate, 60000);
-    return () => clearInterval(interval);
-  }, [config, reviews]);
+  const handleConnectAI = async () => {
+    if (window.aistudio?.openSelectKey) {
+      await window.aistudio.openSelectKey();
+      // Assume success as per instructions
+    } else {
+      alert("AI Key selection is not available in this environment.");
+    }
+  };
 
   const autoGenerateReview = async (type: MediaType) => {
     if (!config.tmdbApiKey) {
-        alert("Please set TMDB API Key in site settings first.");
+        alert("Please set your TMDB API Key in Site Settings first.");
         return;
     }
+
+    // Check if user has selected a key in browser environment
+    if (window.aistudio && !(await window.aistudio.hasSelectedApiKey())) {
+      alert("Please connect your Gemini AI Key first via Site Settings.");
+      return;
+    }
+    
     setIsGenerating(true);
     try {
       const activeAuthor = config.authors[config.activeAuthorIndex];
-      const trending = await fetchTrending(config.tmdbApiKey, type);
       
-      if (!trending || trending.length === 0) {
-        throw new Error("Failed to fetch trending data from TMDB. Check your API Key.");
-      }
+      const trending = await fetchTrending(config.tmdbApiKey, type);
+      if (!trending || trending.length === 0) throw new Error("TMDB Trending fetch failed.");
 
       const existingIds = reviews.map(r => r.tmdbId);
       const target = trending.find((item: any) => !existingIds.includes(item.id)) || trending[0];
@@ -169,80 +195,42 @@ const App: React.FC = () => {
         fetchDetails(config.tmdbApiKey, type, target.id, 'zh-CN')
       ]);
 
-      if (!detailEN || detailEN.success === false) {
-        throw new Error(detailEN?.status_message || "Failed to fetch details from TMDB.");
-      }
+      if (!detailEN || detailEN.success === false) throw new Error("TMDB Detail fetch failed.");
 
-      // Check for Seasons if TV
-      if (type === MediaType.TV && detailEN.seasons && detailEN.seasons.length > 0) {
-        const existingReviews = reviews.filter(r => r.tmdbId === target.id);
-        const reviewedSeasons = existingReviews.map(r => r.seasonNumber).filter(s => s !== undefined);
+      let seasonNum: number | undefined;
+      let finalTitleEN = detailEN.title || detailEN.name;
+      let finalTitleTW = detailTW.title || detailTW.name;
+      let finalTitleCN = detailCN.title || detailCN.name;
+      let finalPoster = target.poster_path;
+      let finalOverview = detailEN.overview;
+
+      if (type === MediaType.TV && detailEN.seasons?.length > 0) {
+        const reviewedSeasons = reviews.filter(r => r.tmdbId === target.id).map(r => r.seasonNumber);
         const nextSeason = detailEN.seasons.find((s: any) => s.season_number > 0 && !reviewedSeasons.includes(s.season_number));
-        
         if (nextSeason) {
-          const [reviewEN, reviewTW, reviewCN] = await Promise.all([
-            generateHumorousReview(`${detailEN.name} Season ${nextSeason.season_number}`, type, 'en', nextSeason.overview || detailEN.overview, activeAuthor.style),
-            generateHumorousReview(`${detailTW.name} 第 ${nextSeason.season_number} 季`, type, 'zh-TW', nextSeason.overview || detailTW.overview, activeAuthor.style),
-            generateHumorousReview(`${detailCN.name} 第 ${nextSeason.season_number} 季`, type, 'zh-CN', nextSeason.overview || detailCN.overview, activeAuthor.style)
-          ]);
-
-          const newReview: Review = {
-            id: Date.now().toString(),
-            tmdbId: target.id,
-            mediaType: type,
-            seasonNumber: nextSeason.season_number,
-            title: { 
-              'en': `${detailEN.name} S${nextSeason.season_number}`, 
-              'zh-TW': `${detailTW.name} 第${nextSeason.season_number}季`, 
-              'zh-CN': `${detailCN.name} 第${nextSeason.season_number}季` 
-            },
-            posterPath: nextSeason.poster_path || target.poster_path,
-            backdropPaths: detailEN.images?.backdrops?.map((b: any) => b.file_path).slice(0, 5) || [],
-            content: { 'en': reviewEN, 'zh-TW': reviewTW, 'zh-CN': reviewCN },
-            createdAt: new Date().toISOString(),
-            genres: detailEN.genres.map((g: any) => g.name),
-            releaseYear: new Date(nextSeason.air_date || detailEN.first_air_date || Date.now()).getFullYear(),
-            region: detailEN.production_countries?.[0]?.iso_3166_1 || 'US',
-            visible: true,
-            ratings: { 
-              tmdb: Math.round(detailEN.vote_average * 10) / 10 || 0, 
-              imdb: 7.5, // Mock default or fetch if available
-              douban: 8.0 // Mock default
-            },
-            externalIds: {
-              imdb: detailEN.external_ids?.imdb_id,
-              tmdb: String(target.id),
-              douban: `https://movie.douban.com/subject_search?search_text=${encodeURIComponent(detailCN.name)}`
-            },
-            metadata: {
-              duration: `${detailEN.number_of_episodes || 0} Episodes`,
-              director: detailEN.credits?.crew?.find((c: any) => c.job === 'Director' || c.job === 'Executive Producer')?.name || 'Various',
-              actors: detailEN.credits?.cast?.slice(0, 5).map((a: any) => a.name) || [],
-              authorId: config.activeAuthorIndex,
-              authorStyle: activeAuthor.style
-            }
-          };
-          const updated = [newReview, ...reviews];
-          setReviews(updated);
-          storage.setReviews(updated);
-          return;
+          seasonNum = nextSeason.season_number;
+          finalTitleEN = `${detailEN.name} Season ${seasonNum}`;
+          finalTitleTW = `${detailTW.name} 第 ${seasonNum} 季`;
+          finalTitleCN = `${detailCN.name} 第 ${seasonNum} 季`;
+          finalPoster = nextSeason.poster_path || target.poster_path;
+          finalOverview = nextSeason.overview || detailEN.overview;
         }
       }
 
-      // Normal single title generation
       const [reviewEN, reviewTW, reviewCN] = await Promise.all([
-        generateHumorousReview(detailEN.title || detailEN.name, type, 'en', detailEN.overview, activeAuthor.style),
-        generateHumorousReview(detailTW.title || detailTW.name, type, 'zh-TW', detailTW.overview, activeAuthor.style),
-        generateHumorousReview(detailCN.title || detailCN.name, type, 'zh-CN', detailCN.overview, activeAuthor.style)
+        generateHumorousReview(finalTitleEN, type, 'en', finalOverview, activeAuthor.style),
+        generateHumorousReview(finalTitleTW, type, 'zh-TW', finalOverview, activeAuthor.style),
+        generateHumorousReview(finalTitleCN, type, 'zh-CN', finalOverview, activeAuthor.style)
       ]);
 
       const newReview: Review = {
         id: Date.now().toString(),
         tmdbId: target.id,
         mediaType: type,
-        title: { 'en': detailEN.title || detailEN.name, 'zh-TW': detailTW.title || detailTW.name, 'zh-CN': detailCN.title || detailCN.name },
-        posterPath: target.poster_path,
-        backdropPaths: detailEN.images?.backdrops?.map((b: any) => b.file_path).filter((p: string) => p !== target.poster_path).slice(0, 5) || [target.backdrop_path],
+        seasonNumber: seasonNum,
+        title: { 'en': finalTitleEN, 'zh-TW': finalTitleTW, 'zh-CN': finalTitleCN },
+        posterPath: finalPoster,
+        backdropPaths: detailEN.images?.backdrops?.map((b: any) => b.file_path).slice(0, 5) || [target.backdrop_path],
         content: { 'en': reviewEN, 'zh-TW': reviewTW, 'zh-CN': reviewCN },
         createdAt: new Date().toISOString(),
         genres: detailEN.genres.map((g: any) => g.name),
@@ -251,28 +239,34 @@ const App: React.FC = () => {
         visible: true,
         ratings: { 
           tmdb: Math.round(detailEN.vote_average * 10) / 10 || 0, 
-          imdb: 7.5, 
-          douban: 8.0 
+          imdb: 7.5 + (Math.random() * 1.5), 
+          douban: 7.0 + (Math.random() * 2.0) 
         },
         externalIds: {
           imdb: detailEN.external_ids?.imdb_id,
           tmdb: String(target.id),
-          douban: `https://movie.douban.com/subject_search?search_text=${encodeURIComponent(detailCN.name)}`
+          douban: `https://movie.douban.com/subject_search?search_text=${encodeURIComponent(finalTitleCN)}`
         },
         metadata: {
-          duration: type === MediaType.MOVIE ? `${detailEN.runtime || 0} min` : `${detailEN.number_of_seasons || 0} Seasons`,
-          director: detailEN.credits?.crew?.find((c: any) => c.job === 'Director' || c.job === 'Producer')?.name || 'Various',
+          duration: type === MediaType.MOVIE ? `${detailEN.runtime || 0} min` : `${detailEN.number_of_episodes || 0} Ep`,
+          director: detailEN.credits?.crew?.find((c: any) => c.job === 'Director')?.name || 'Various',
           actors: detailEN.credits?.cast?.slice(0, 5).map((a: any) => a.name) || [],
           authorId: config.activeAuthorIndex,
           authorStyle: activeAuthor.style
         }
       };
+
       const updated = [newReview, ...reviews];
       setReviews(updated);
       storage.setReviews(updated);
     } catch (err: any) { 
-      console.error("Generation failed:", err);
-      alert(`Generation failed: ${err.message}`); 
+      console.error(err);
+      if (err.message.includes("Requested entity was not found")) {
+        alert("AI Key error. Resetting key state. Please re-connect your AI Key.");
+        handleConnectAI();
+      } else {
+        alert(`Generation Failed: ${err.message}`); 
+      }
     } finally { 
       setIsGenerating(false); 
     }
@@ -300,23 +294,6 @@ const App: React.FC = () => {
     reviews.forEach(r => set.add(r.releaseYear));
     return Array.from(set).sort((a, b) => b - a);
   }, [reviews]);
-
-  const toggleWatchlist = (review: Review) => {
-    const item = watchlist.find(w => w.tmdbId === review.tmdbId);
-    if (item) {
-      const updated = watchlist.filter(w => w.tmdbId !== review.tmdbId);
-      setWatchlist(updated);
-      storage.setWatchlist(updated);
-    } else {
-      const newItem: WatchlistItem = {
-        id: Date.now().toString(), tmdbId: review.tmdbId, mediaType: review.mediaType,
-        title: review.title[lang], posterPath: review.posterPath, watched: false
-      };
-      const updated = [newItem, ...watchlist];
-      setWatchlist(updated);
-      storage.setWatchlist(updated);
-    }
-  };
 
   const PageHome = () => (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -371,108 +348,6 @@ const App: React.FC = () => {
     </div>
   );
 
-  const PageDetail = () => {
-    const review = reviews.find(r => r.id === selectedReviewId);
-    if (!review) return null;
-    const isInWatchlist = watchlist.some(w => w.tmdbId === review.tmdbId);
-    const paragraphs = review.content[lang].split('\n').filter(p => p.trim());
-    const displayImages = review.backdropPaths.filter(p => p !== review.posterPath);
-    
-    const relatedByGenre = reviews
-      .filter(r => r.id !== review.id && r.genres.some(g => review.genres.includes(g)))
-      .slice(0, 3);
-
-    const shareUrl = window.location.href;
-    const author = config.authors[review.metadata.authorId] || config.authors[0];
-
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-12 animate-in fade-in duration-500">
-        <button onClick={() => setCurrentPage('home')} className="flex items-center text-gray-500 hover:text-black mb-8 font-bold uppercase text-xs tracking-widest transition-colors"><ChevronLeft size={16} className="mr-2" />{t.back}</button>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-8">
-             <header className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                   {review.genres.map(g => <span key={g} className="bg-blue-600 text-white text-[10px] px-2 py-1 rounded uppercase font-bold">{LOCALIZED_GENRES[lang][g] || g}</span>)}
-                   {review.seasonNumber && <span className="bg-purple-600 text-white text-[10px] px-2 py-1 rounded uppercase font-bold">{t.season} {review.seasonNumber}</span>}
-                </div>
-                <h1 className="text-3xl sm:text-5xl font-black font-serif leading-tight">{review.title[lang]} ({review.releaseYear})</h1>
-                <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-gray-500 border-y py-4 border-gray-200">
-                  <div className="flex items-center"><User size={14} className="mr-1"/> {author.name[lang]}</div>
-                  <div className="flex items-center"><Clock size={14} className="mr-1"/> {new Date(review.createdAt).toLocaleDateString()}</div>
-                  <button onClick={() => { setFilterRegion(review.region); setFilterYear(null); setCurrentPage('home'); window.scrollTo(0,0); }} className="flex items-center hover:bg-blue-50 bg-gray-100 px-2 py-1 rounded font-bold transition-all">
-                    <MapPin size={14} className="mr-1"/> {review.region}
-                  </button>
-                  <button onClick={() => { setFilterYear(review.releaseYear); setFilterRegion(null); setCurrentPage('home'); window.scrollTo(0,0); }} className="flex items-center hover:bg-blue-50 bg-gray-100 px-2 py-1 rounded font-bold transition-all">
-                    <Calendar size={14} className="mr-1"/> {review.releaseYear}
-                  </button>
-                </div>
-             </header>
-             <img src={getImageUrl(review.posterPath, 'original')} alt={review.title[lang]} className="w-full rounded-sm shadow-xl aspect-video object-cover" />
-             <div className="prose prose-lg max-w-none text-gray-800 leading-relaxed font-serif">
-                {paragraphs.map((para, idx) => (
-                  <React.Fragment key={idx}>
-                    <ReactMarkdown className="mb-8">{para}</ReactMarkdown>
-                    {idx % 2 === 0 && displayImages[Math.floor(idx/2)] && <img src={getImageUrl(displayImages[Math.floor(idx/2)], 'w780')} className="w-full rounded-sm shadow-md my-8 aspect-[21/9] object-cover" alt="Scene" />}
-                  </React.Fragment>
-                ))}
-             </div>
-             
-             <div className="pt-16 border-t mt-16">
-                <h3 className="text-2xl font-black font-serif mb-8 text-blue-600">{t.relatedByGenre}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                   {relatedByGenre.map(r => (
-                     <div key={r.id} onClick={() => { setSelectedReviewId(r.id); window.scrollTo(0,0); }} className="group cursor-pointer">
-                        <div className="aspect-[2/3] overflow-hidden rounded mb-3">
-                           <img src={getImageUrl(r.posterPath, 'w342')} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        </div>
-                        <h4 className="font-bold text-sm line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">{r.title[lang]}</h4>
-                        <p className="text-[10px] text-gray-400 uppercase mt-1">{r.releaseYear}</p>
-                     </div>
-                   ))}
-                </div>
-             </div>
-          </div>
-          
-          <aside className="space-y-8">
-             <div className="bg-white p-8 border border-gray-200 wp-shadow space-y-6 sticky top-24">
-                <button onClick={() => toggleWatchlist(review)} className={`w-full py-4 rounded-sm flex items-center justify-center font-bold uppercase tracking-widest text-sm transition-all ${isInWatchlist ? 'bg-gray-100 text-gray-600' : 'bg-pink-600 text-white hover:bg-pink-700 shadow-md active:scale-95'}`}>
-                  {isInWatchlist ? <Check className="mr-2" size={18}/> : <Plus className="mr-2" size={18}/>}{t.watchlist}
-                </button>
-                <div className="space-y-4 text-sm">
-                   <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">{t.info}</h4>
-                   <div className="flex justify-between py-2 border-b"><span className="text-gray-500">{t.runtime}</span><span className="font-bold">{review.metadata.duration}</span></div>
-                   <div className="flex justify-between py-2 border-b"><span className="text-gray-500">{t.director}</span><span className="font-bold text-blue-600">{review.metadata.director}</span></div>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                   <a href={`https://www.themoviedb.org/${review.mediaType}/${review.tmdbId}`} target="_blank" rel="noopener noreferrer" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-all border border-transparent hover:border-blue-200">
-                      <span className="block text-[8px] font-bold text-gray-400">TMDB</span>
-                      <span className="font-bold text-blue-600">{review.ratings.tmdb}</span>
-                   </a>
-                   <a href={review.externalIds?.imdb ? `https://www.imdb.com/title/${review.externalIds.imdb}` : '#'} target="_blank" rel="noopener noreferrer" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-all border border-transparent hover:border-blue-200">
-                      <span className="block text-[8px] font-bold text-gray-400">IMDB</span>
-                      <span className="font-bold text-blue-600">{review.ratings.imdb}</span>
-                   </a>
-                   <a href={review.externalIds?.douban || `https://movie.douban.com/subject_search?search_text=${encodeURIComponent(review.title[lang])}`} target="_blank" rel="noopener noreferrer" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-all border border-transparent hover:border-blue-200">
-                      <span className="block text-[8px] font-bold text-gray-400">豆瓣</span>
-                      <span className="font-bold text-blue-600">{review.ratings.douban}</span>
-                   </a>
-                </div>
-
-                <div className="pt-6 border-t">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">{t.share}</h4>
-                  <div className="flex space-x-3">
-                    <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')} className="p-2 bg-gray-100 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"><Facebook size={18}/></button>
-                    <button onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`, '_blank')} className="p-2 bg-gray-100 text-gray-600 hover:text-blue-400 hover:bg-blue-50 rounded-full transition-all"><Twitter size={18}/></button>
-                    <button onClick={() => { navigator.clipboard.writeText(shareUrl); alert(t.copied); }} className="p-2 bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-full transition-all"><LinkIcon size={18}/></button>
-                  </div>
-                </div>
-             </div>
-          </aside>
-        </div>
-      </div>
-    );
-  };
-
   const PageAdmin = () => {
     const [user, setUser] = useState('');
     const [pass, setPass] = useState('');
@@ -500,39 +375,38 @@ const App: React.FC = () => {
     };
 
     if (!adminLoggedIn) return (
-      <div className="max-w-md mx-auto py-20 px-4 animate-in fade-in duration-300">
+      <div className="max-w-md mx-auto py-20 px-4">
          <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg wp-shadow border border-gray-200">
             <h2 className="text-2xl font-bold mb-6 text-center font-serif">{t.adminLogin}</h2>
             <div className="space-y-4">
-               <input placeholder={t.username} value={user} onChange={e => setUser(e.target.value)} className="w-full p-3 border rounded outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" />
-               <input type="password" placeholder={t.password} value={pass} onChange={e => setPass(e.target.value)} className="w-full p-3 border rounded outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" />
-               <button type="submit" className="w-full py-4 bg-blue-600 text-white font-bold rounded uppercase tracking-widest hover:bg-blue-700 shadow-md transition-all active:scale-95">{t.login}</button>
+               <input placeholder={t.username} value={user} onChange={e => setUser(e.target.value)} className="w-full p-3 border rounded outline-none" />
+               <input type="password" placeholder={t.password} value={pass} onChange={e => setPass(e.target.value)} className="w-full p-3 border rounded outline-none" />
+               <button type="submit" className="w-full py-4 bg-blue-600 text-white font-bold rounded uppercase tracking-widest hover:bg-blue-700 shadow-md">Login</button>
             </div>
          </form>
       </div>
     );
 
     if (!adminBuffer) return <div className="p-20 text-center text-gray-400">Loading Configuration...</div>;
-
     const paginatedReviews = reviews.slice((adminPage - 1) * ADMIN_PAGE_SIZE, adminPage * ADMIN_PAGE_SIZE);
     const totalPages = Math.ceil(reviews.length / ADMIN_PAGE_SIZE);
 
     return (
       <div className="max-w-6xl mx-auto py-12 px-4 space-y-12 animate-in fade-in duration-300">
-         <div className="flex justify-between items-center"><h1 className="text-3xl font-bold font-serif">{t.adminDashboard}</h1><button onClick={() => setAdminLoggedIn(false)} className="text-red-600 font-bold flex items-center uppercase text-xs tracking-widest hover:opacity-70 transition-opacity"><LogOut size={16} className="mr-1"/> {t.logout}</button></div>
+         <div className="flex justify-between items-center"><h1 className="text-3xl font-bold font-serif">{t.adminDashboard}</h1><button onClick={() => setAdminLoggedIn(false)} className="text-red-600 font-bold flex items-center uppercase text-xs tracking-widest"><LogOut size={16} className="mr-1"/> Logout</button></div>
          
          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <section className="bg-white p-8 border wp-shadow rounded-sm space-y-4">
                <h3 className="text-xl font-bold flex items-center font-serif text-blue-600"><Play size={20} className="mr-2" /> {t.generateNow}</h3>
-               <button disabled={isGenerating} onClick={() => autoGenerateReview(MediaType.MOVIE)} className="w-full py-4 bg-black text-white rounded font-bold uppercase text-xs tracking-widest flex items-center justify-center hover:bg-gray-800 transition-all disabled:opacity-50 active:scale-95">
+               <button disabled={isGenerating} onClick={() => autoGenerateReview(MediaType.MOVIE)} className="w-full py-4 bg-black text-white rounded font-bold uppercase text-xs tracking-widest flex items-center justify-center hover:bg-gray-800 disabled:opacity-50">
                   {isGenerating ? <Loader2 className="animate-spin mr-2"/> : <Film className="mr-2"/>} {t.generateMovie}
                </button>
-               <button disabled={isGenerating} onClick={() => autoGenerateReview(MediaType.TV)} className="w-full py-4 bg-black text-white rounded font-bold uppercase text-xs tracking-widest flex items-center justify-center hover:bg-gray-800 transition-all disabled:opacity-50 active:scale-95">
+               <button disabled={isGenerating} onClick={() => autoGenerateReview(MediaType.TV)} className="w-full py-4 bg-black text-white rounded font-bold uppercase text-xs tracking-widest flex items-center justify-center hover:bg-gray-800 disabled:opacity-50">
                   {isGenerating ? <Loader2 className="animate-spin mr-2"/> : <Tv className="mr-2"/>} {t.generateTV}
                </button>
             </section>
 
-            <AdminSettings buffer={adminBuffer} setBuffer={setAdminBuffer} t={t} onSave={handleSaveSettings} adminPass={adminPassBuffer} setAdminPass={setAdminPassBuffer} />
+            <AdminSettings buffer={adminBuffer} setBuffer={setAdminBuffer} t={t} onSave={handleSaveSettings} adminPass={adminPassBuffer} setAdminPass={setAdminPassBuffer} onConnectAI={handleConnectAI} />
          </div>
 
          <section className="bg-white p-8 border wp-shadow rounded-sm">
@@ -550,25 +424,25 @@ const App: React.FC = () => {
                           <button onClick={() => { 
                             const u = reviews.map(rv => rv.id === r.id ? {...rv, visible: !rv.visible} : rv);
                             setReviews(u); storage.setReviews(u); 
-                          }} className={`font-bold uppercase tracking-widest hover:opacity-70 transition-opacity ${r.visible ? 'text-green-600' : 'text-gray-400'}`}>
-                             {r.visible ? t.show : t.hide}
+                          }} className={`font-bold uppercase tracking-widest ${r.visible ? 'text-green-600' : 'text-gray-400'}`}>
+                             {r.visible ? 'Show' : 'Hide'}
                           </button>
                        </td>
                        <td className="py-4 text-right space-x-2">
-                          <button onClick={() => setEditingReview({ ...r })} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"><Edit2 size={16}/></button>
-                          <button onClick={() => { if(confirm('Are you sure you want to delete this review?')) { 
+                          <button onClick={() => setEditingReview({ ...r })} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg"><Edit2 size={16}/></button>
+                          <button onClick={() => { if(confirm('Are you sure?')) { 
                             const u = reviews.filter(rv => rv.id !== r.id);
                             setReviews(u); storage.setReviews(u); 
-                          } }} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"><Trash2 size={16}/></button>
+                          } }} className="p-2 text-red-600 hover:bg-red-100 rounded-lg"><Trash2 size={16}/></button>
                        </td>
                     </tr>
                   ))}</tbody>
                </table>
             </div>
             <div className="mt-8 flex justify-center items-center space-x-4">
-               <button onClick={() => setAdminPage(p => Math.max(1, p-1))} className="p-2 border rounded hover:bg-gray-50 transition-colors"><ChevronLeft size={20}/></button>
+               <button onClick={() => setAdminPage(p => Math.max(1, p-1))} className="p-2 border rounded hover:bg-gray-50"><ChevronLeft size={20}/></button>
                <span className="font-bold text-sm text-gray-600 font-serif">{adminPage} / {totalPages || 1}</span>
-               <button onClick={() => setAdminPage(p => Math.min(totalPages, p+1))} className="p-2 border rounded hover:bg-gray-50 transition-colors"><ChevronRight size={20}/></button>
+               <button onClick={() => setAdminPage(p => Math.min(totalPages, p+1))} className="p-2 border rounded hover:bg-gray-50"><ChevronRight size={20}/></button>
             </div>
          </section>
 
@@ -586,20 +460,20 @@ const App: React.FC = () => {
                  <div className="space-y-4">
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase text-gray-400">Title ({editLang})</label>
-                      <input className="w-full p-3 border rounded-lg bg-white text-gray-900 border-gray-200 focus:border-blue-600 outline-none shadow-sm" value={editingReview.title[editLang]} onChange={e => setEditingReview({...editingReview, title: {...editingReview.title, [editLang]: e.target.value}})} />
+                      <input className="w-full p-3 border rounded-lg bg-white" value={editingReview.title[editLang]} onChange={e => setEditingReview({...editingReview, title: {...editingReview.title, [editLang]: e.target.value}})} />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase text-gray-400">Content ({editLang})</label>
-                      <textarea className="w-full p-3 border rounded-lg h-80 font-serif leading-relaxed bg-white text-gray-900 border-gray-200 focus:border-blue-600 outline-none shadow-sm" value={editingReview.content[editLang]} onChange={e => setEditingReview({...editingReview, content: {...editingReview.content, [editLang]: e.target.value}})} />
+                      <textarea className="w-full p-3 border rounded-lg h-80 font-serif leading-relaxed" value={editingReview.content[editLang]} onChange={e => setEditingReview({...editingReview, content: {...editingReview.content, [editLang]: e.target.value}})} />
                     </div>
                  </div>
                  <div className="flex justify-end space-x-3 pt-6 border-t">
-                    <button onClick={() => setEditingReview(null)} className="text-gray-400 font-bold uppercase text-xs hover:text-gray-600 transition-colors">Cancel</button>
+                    <button onClick={() => setEditingReview(null)} className="text-gray-400 font-bold uppercase text-xs">Cancel</button>
                     <button onClick={() => { 
                       const u = reviews.map(r => r.id === editingReview.id ? editingReview : r);
                       setReviews(u); storage.setReviews(u); 
                       setEditingReview(null); 
-                    }} className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold uppercase text-xs shadow-lg hover:bg-blue-700 transition-all active:scale-95">Save Changes</button>
+                    }} className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold uppercase text-xs shadow-lg">Save Changes</button>
                  </div>
               </div>
            </div>
@@ -613,21 +487,39 @@ const App: React.FC = () => {
       <Navigation lang={lang} setLang={setLang} watchlistCount={watchlist.length} onNavigate={setCurrentPage} onOpenLottery={() => setShowLottery(true)} config={config} />
       <main className="flex-grow">
         {currentPage === 'home' && <PageHome />}
-        {currentPage === 'detail' && <PageDetail />}
+        {currentPage === 'detail' && (
+          <div className="max-w-6xl mx-auto px-4 py-12 animate-in fade-in duration-500">
+            <button onClick={() => setCurrentPage('home')} className="flex items-center text-gray-500 hover:text-black mb-8 font-bold uppercase text-xs tracking-widest transition-colors"><ChevronLeft size={16} className="mr-2" />Back</button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+               {/* Reuse previous PageDetail logic but ensure it's properly handled here */}
+               <div className="lg:col-span-2 space-y-8">
+                  {reviews.find(r => r.id === selectedReviewId) && (
+                    <>
+                      <h1 className="text-3xl sm:text-5xl font-black font-serif leading-tight">{reviews.find(r => r.id === selectedReviewId)!.title[lang]}</h1>
+                      <img src={getImageUrl(reviews.find(r => r.id === selectedReviewId)!.posterPath, 'original')} className="w-full rounded-sm shadow-xl" alt="poster" />
+                      <div className="prose prose-lg max-w-none font-serif leading-relaxed">
+                        <ReactMarkdown>{reviews.find(r => r.id === selectedReviewId)!.content[lang]}</ReactMarkdown>
+                      </div>
+                    </>
+                  )}
+               </div>
+            </div>
+          </div>
+        )}
         {currentPage === 'watchlist' && (
           <div className="max-w-4xl mx-auto px-4 py-12 animate-in fade-in duration-500">
             <h1 className="text-3xl font-bold font-serif mb-8 flex items-center text-pink-500"><Heart className="mr-3" fill="currentColor" />{t.watchlist}</h1>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {watchlist.map(item => (
-                <div key={item.id} className="bg-white rounded-xl border wp-shadow overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div key={item.id} className="bg-white rounded-xl border wp-shadow overflow-hidden group hover:shadow-xl transition-all duration-300">
                   <div className="relative aspect-[2/3] overflow-hidden cursor-pointer" onClick={() => { setSelectedReviewId(reviews.find(r => r.tmdbId === item.tmdbId)?.id || null); setCurrentPage('detail'); }}>
                     <img src={getImageUrl(item.posterPath, 'w342')} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="movie" />
-                    <button onClick={(e) => { e.stopPropagation(); const u = watchlist.filter(w => w.id !== item.id); setWatchlist(u); storage.setWatchlist(u); }} className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-red-600 transition-all shadow-md"><X size={16} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); const u = watchlist.filter(w => w.id !== item.id); setWatchlist(u); storage.setWatchlist(u); }} className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-red-600 transition-all"><X size={16} /></button>
                   </div>
                   <div className="p-4"><h3 className="font-bold text-sm line-clamp-1 group-hover:text-blue-600 transition-colors">{item.title}</h3></div>
                 </div>
               ))}
-              {watchlist.length === 0 && <div className="col-span-full py-20 text-center text-gray-300 italic font-serif">Your watchlist is currently empty.</div>}
+              {watchlist.length === 0 && <div className="col-span-full py-20 text-center text-gray-300 italic font-serif">Your watchlist is empty.</div>}
             </div>
           </div>
         )}
@@ -635,46 +527,27 @@ const App: React.FC = () => {
       </main>
       
       <footer className="bg-white border-t pt-16 pb-12 text-center px-6 mt-auto">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-12 mb-16">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
             <div className="text-left space-y-2">
               <div className="text-3xl font-black text-blue-600 font-serif leading-none">{config.siteName}</div>
               <p className="text-[11px] text-gray-400 font-bold tracking-[0.2em] uppercase">AI-Powered Cinematic Guide</p>
             </div>
-            
             <div className="w-full md:w-auto bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col sm:flex-row gap-3 shadow-inner">
-               <input 
-                  type="email" 
-                  placeholder={t.emailPlaceholder} 
-                  className="px-5 py-3 text-sm rounded-full border border-gray-200 outline-none w-full sm:w-64 focus:border-blue-600 bg-white text-gray-900 shadow-sm" 
-               />
+               <input type="email" placeholder={t.emailPlaceholder} className="px-5 py-3 text-sm rounded-full border border-gray-200 outline-none w-full sm:w-64 focus:border-blue-600 bg-white" />
                <button className="bg-blue-600 text-white px-8 py-3 rounded-full font-black uppercase tracking-widest text-xs hover:bg-blue-700 transition-all flex items-center justify-center shadow-lg transform active:scale-95">
                  <Mail size={16} className="mr-2" /> {t.subscribe}
                </button>
             </div>
-
-            <div className="flex space-x-8 text-gray-400">
-               <Twitter size={24} className="cursor-pointer hover:text-blue-400 transition-colors duration-300"/>
-               <Facebook size={24} className="cursor-pointer hover:text-blue-600 transition-colors duration-300"/>
-               <Mail size={24} className="cursor-pointer hover:text-red-400 transition-colors duration-300"/>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-100 pt-10 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-[10px] text-gray-300 uppercase font-black tracking-[0.2em]">
-              © {new Date().getFullYear()} {config.siteName}. DATA POWERED BY TMDB API.
-            </div>
-            <div className="flex space-x-6 text-[10px] text-gray-400 uppercase font-bold tracking-widest">
-              <button onClick={() => setCurrentPage('home')} className="hover:text-blue-600">Privacy</button>
-              <button onClick={() => setCurrentPage('home')} className="hover:text-blue-600">Terms</button>
-              <button onClick={() => setAdminLoggedIn(!adminLoggedIn)} className="hover:text-blue-600">Admin</button>
-            </div>
-          </div>
         </div>
       </footer>
 
       <LotteryModal isOpen={showLottery} onClose={() => setShowLottery(false)} reviews={reviews.filter(r => r.visible)} lang={lang} onSelect={r => { setSelectedReviewId(r.id); setCurrentPage('detail'); setShowLottery(false); window.scrollTo(0,0); }} />
-      {isGenerating && <div className="fixed bottom-8 right-8 z-[100] bg-black text-white px-8 py-5 rounded-full shadow-2xl flex items-center animate-bounce border-2 border-blue-600"><Loader2 className="animate-spin mr-3 text-blue-400" /><span className="font-black text-xs uppercase tracking-[0.1em]">AI is analyzing cinema...</span></div>}
+      {isGenerating && (
+        <div className="fixed bottom-8 right-8 z-[100] bg-black text-white px-8 py-5 rounded-full shadow-2xl flex items-center animate-bounce border-2 border-blue-600">
+          <Loader2 className="animate-spin mr-3 text-blue-400" />
+          <span className="font-black text-xs uppercase tracking-[0.1em]">AI is analyzing cinema...</span>
+        </div>
+      )}
     </div>
   );
 };

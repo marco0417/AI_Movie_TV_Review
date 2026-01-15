@@ -9,7 +9,8 @@ export async function generateHumorousReview(
   overview: string,
   style: AuthorStyle = 'humorous'
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Always create a new instance to pick up the injected process.env.API_KEY
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
   
   const langPrompt = {
     'en': 'English',
@@ -39,17 +40,18 @@ export async function generateHumorousReview(
       config: {
         temperature: 0.9,
         topP: 0.95,
-        thinkingConfig: { thinkingBudget: 0 } // Flash doesn't need much thinking for short reviews
       }
     });
 
     const text = response.text;
-    if (!text) {
-        throw new Error("Gemini returned empty response.");
-    }
+    if (!text) throw new Error("Gemini returned an empty response.");
     return text;
   } catch (error: any) {
-    console.error("Gemini Error:", error);
-    throw new Error(`AI Generation failed: ${error.message || 'Unknown Error'}`);
+    console.error("Gemini Error Detail:", error);
+    // Throw a cleaner error for the UI
+    if (error.message?.includes("API Key")) {
+      throw new Error("API Key must be set. Please go to Admin -> Site Settings to connect your Gemini AI Key.");
+    }
+    throw new Error(error.message || 'AI Generation failed');
   }
 }
