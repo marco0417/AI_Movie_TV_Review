@@ -17,36 +17,10 @@
       .wp-shadow {
         box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
       }
-      .matrix-bg {
-        background: black;
-        overflow: hidden;
-      }
-      .matrix-column {
-        position: absolute;
-        top: -100px;
-        color: #0F0;
-        font-family: monospace;
-        font-size: 20px;
-        text-shadow: 0 0 5px #0F0;
-        animation: matrix-fall linear infinite;
-        white-space: nowrap;
-        user-select: none;
-        z-index: 0;
-      }
-      @keyframes matrix-fall {
-        to { transform: translateY(110vh); }
-      }
-      .glitch {
-        position: relative;
-        animation: glitch-anim 0.2s infinite;
-      }
-      @keyframes glitch-anim {
-        0% { transform: translate(0); }
-        20% { transform: translate(-2px, 2px); }
-        40% { transform: translate(-2px, -2px); }
-        60% { transform: translate(2px, 2px); }
-        80% { transform: translate(2px, -2px); }
-        100% { transform: translate(0); }
+      /* Ensure inputs don't hide text in system dark mode */
+      input, textarea {
+        background-color: white !important;
+        color: #1a202c !important; /* text-gray-900 */
       }
     </style>
 <script type="importmap">
@@ -64,5 +38,6 @@
 </head>
 <body class="bg-[#f1f1f1] text-[#333]">
     <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>

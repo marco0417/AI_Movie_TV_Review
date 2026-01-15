@@ -10,18 +10,18 @@ import { LotteryModal } from './components/LotteryModal';
 import { fetchTrending, fetchDetails, getImageUrl } from './services/tmdbService';
 import { generateHumorousReview } from './services/geminiService';
 import { 
-  Mail, ChevronRight, Clock, User, Film, Tv, MapPin, 
-  ExternalLink, Plus, Check, LogOut, Settings as SettingsIcon, 
+  Mail, Clock, User, Film, Tv, MapPin, 
+  Plus, Check, LogOut, Settings as SettingsIcon, 
   Play, RefreshCw, Loader2, Heart, X, Trash2, Edit2, ChevronLeft,
-  Eye, EyeOff, Share2, Facebook, Twitter, Link as LinkIcon, Save,
-  Palette, UserCircle, Calendar, Hash
+  Share2, Facebook, Twitter, Link as LinkIcon, Save,
+  UserCircle, Calendar, ChevronRight
 } from 'lucide-react';
 
 const ADMIN_PAGE_SIZE = 10;
 
-// Sub-components moved out of App to prevent focus loss on state change
+// Stable Sub-component for Admin Settings
 const AdminSettings = ({ buffer, setBuffer, t, onSave }: any) => (
-  <section className="bg-white p-8 border wp-shadow rounded-sm space-y-6 md:col-span-2">
+  <section className="bg-white p-6 sm:p-8 border wp-shadow rounded-sm space-y-6 md:col-span-2">
     <div className="flex justify-between items-center">
       <h3 className="text-xl font-bold flex items-center font-serif text-blue-600"><SettingsIcon className="mr-2" /> {t.siteSettings}</h3>
       <button onClick={onSave} className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest flex items-center hover:bg-blue-700 shadow-md">
@@ -320,7 +320,7 @@ const App: React.FC = () => {
       </div>
 
       {filteredReviews.length === 0 && (
-         <div className="text-center py-20 text-gray-400 italic">No reviews match your filters.</div>
+         <div className="text-center py-20 text-gray-400 italic font-serif">No reviews match your filters.</div>
       )}
     </div>
   );
@@ -341,7 +341,7 @@ const App: React.FC = () => {
 
     return (
       <div className="max-w-6xl mx-auto px-4 py-12 animate-in fade-in duration-500">
-        <button onClick={() => setCurrentPage('home')} className="flex items-center text-gray-500 hover:text-black mb-8 font-bold uppercase text-xs tracking-widest"><ChevronLeft size={16} className="mr-2" />{t.back}</button>
+        <button onClick={() => setCurrentPage('home')} className="flex items-center text-gray-500 hover:text-black mb-8 font-bold uppercase text-xs tracking-widest transition-colors"><ChevronLeft size={16} className="mr-2" />{t.back}</button>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
              <header className="space-y-4">
@@ -353,10 +353,10 @@ const App: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-gray-500 border-y py-4 border-gray-200">
                   <div className="flex items-center"><User size={14} className="mr-1"/> {author.name[lang]}</div>
                   <div className="flex items-center"><Clock size={14} className="mr-1"/> {new Date(review.createdAt).toLocaleDateString()}</div>
-                  <button onClick={() => { setFilterRegion(review.region); setFilterYear(null); setCurrentPage('home'); window.scrollTo(0,0); }} className="flex items-center hover:bg-blue-50 bg-gray-100 px-2 py-1 rounded font-bold transition-colors">
+                  <button onClick={() => { setFilterRegion(review.region); setFilterYear(null); setCurrentPage('home'); window.scrollTo(0,0); }} className="flex items-center hover:bg-blue-50 bg-gray-100 px-2 py-1 rounded font-bold transition-all">
                     <MapPin size={14} className="mr-1"/> {review.region}
                   </button>
-                  <button onClick={() => { setFilterYear(review.releaseYear); setFilterRegion(null); setCurrentPage('home'); window.scrollTo(0,0); }} className="flex items-center hover:bg-blue-50 bg-gray-100 px-2 py-1 rounded font-bold transition-colors">
+                  <button onClick={() => { setFilterYear(review.releaseYear); setFilterRegion(null); setCurrentPage('home'); window.scrollTo(0,0); }} className="flex items-center hover:bg-blue-50 bg-gray-100 px-2 py-1 rounded font-bold transition-all">
                     <Calendar size={14} className="mr-1"/> {review.releaseYear}
                   </button>
                 </div>
@@ -377,9 +377,9 @@ const App: React.FC = () => {
                    {relatedByGenre.map(r => (
                      <div key={r.id} onClick={() => { setSelectedReviewId(r.id); window.scrollTo(0,0); }} className="group cursor-pointer">
                         <div className="aspect-[2/3] overflow-hidden rounded mb-3">
-                           <img src={getImageUrl(r.posterPath, 'w342')} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                           <img src={getImageUrl(r.posterPath, 'w342')} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         </div>
-                        <h4 className="font-bold text-sm line-clamp-2 leading-tight group-hover:text-blue-600">{r.title[lang]}</h4>
+                        <h4 className="font-bold text-sm line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">{r.title[lang]}</h4>
                         <p className="text-[10px] text-gray-400 uppercase mt-1">{r.releaseYear}</p>
                      </div>
                    ))}
@@ -389,24 +389,24 @@ const App: React.FC = () => {
           
           <aside className="space-y-8">
              <div className="bg-white p-8 border border-gray-200 wp-shadow space-y-6 sticky top-24">
-                <button onClick={() => toggleWatchlist(review)} className={`w-full py-4 rounded-sm flex items-center justify-center font-bold uppercase tracking-widest text-sm transition-all ${isInWatchlist ? 'bg-gray-100 text-gray-600' : 'bg-pink-600 text-white hover:bg-pink-700'}`}>
+                <button onClick={() => toggleWatchlist(review)} className={`w-full py-4 rounded-sm flex items-center justify-center font-bold uppercase tracking-widest text-sm transition-all ${isInWatchlist ? 'bg-gray-100 text-gray-600' : 'bg-pink-600 text-white hover:bg-pink-700 shadow-md active:scale-95'}`}>
                   {isInWatchlist ? <Check className="mr-2" size={18}/> : <Plus className="mr-2" size={18}/>}{t.watchlist}
                 </button>
                 <div className="space-y-4 text-sm">
-                   <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">{t.info}</h4>
+                   <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">{t.info}</h4>
                    <div className="flex justify-between py-2 border-b"><span className="text-gray-500">{t.runtime}</span><span className="font-bold">{review.metadata.duration}</span></div>
-                   <div className="flex justify-between py-2 border-b"><span className="text-gray-500">{t.director}</span><button className="font-bold text-blue-600 hover:underline">{review.metadata.director}</button></div>
+                   <div className="flex justify-between py-2 border-b"><span className="text-gray-500">{t.director}</span><span className="font-bold text-blue-600">{review.metadata.director}</span></div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                   <a href={`https://www.themoviedb.org/${review.mediaType}/${review.tmdbId}`} target="_blank" rel="noopener" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-colors">
+                   <a href={`https://www.themoviedb.org/${review.mediaType}/${review.tmdbId}`} target="_blank" rel="noopener noreferrer" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-all border border-transparent hover:border-blue-200">
                       <span className="block text-[8px] font-bold text-gray-400">TMDB</span>
                       <span className="font-bold text-blue-600">{review.ratings.tmdb}</span>
                    </a>
-                   <a href={review.externalIds?.imdb ? `https://www.imdb.com/title/${review.externalIds.imdb}` : '#'} target="_blank" rel="noopener" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-colors">
+                   <a href={review.externalIds?.imdb ? `https://www.imdb.com/title/${review.externalIds.imdb}` : '#'} target="_blank" rel="noopener noreferrer" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-all border border-transparent hover:border-blue-200">
                       <span className="block text-[8px] font-bold text-gray-400">IMDB</span>
                       <span className="font-bold text-blue-600">{review.ratings.imdb}</span>
                    </a>
-                   <a href={review.externalIds?.douban || `https://movie.douban.com/subject_search?search_text=${encodeURIComponent(review.title[lang])}`} target="_blank" rel="noopener" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-colors">
+                   <a href={review.externalIds?.douban || `https://movie.douban.com/subject_search?search_text=${encodeURIComponent(review.title[lang])}`} target="_blank" rel="noopener noreferrer" className="text-center bg-gray-50 p-2 rounded hover:bg-blue-50 transition-all border border-transparent hover:border-blue-200">
                       <span className="block text-[8px] font-bold text-gray-400">豆瓣</span>
                       <span className="font-bold text-blue-600">{review.ratings.douban}</span>
                    </a>
@@ -415,9 +415,9 @@ const App: React.FC = () => {
                 <div className="pt-6 border-t">
                   <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">{t.share}</h4>
                   <div className="flex space-x-3">
-                    <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')} className="p-2 bg-gray-100 text-gray-600 hover:text-blue-600 rounded-full"><Facebook size={18}/></button>
-                    <button onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`, '_blank')} className="p-2 bg-gray-100 text-gray-600 hover:text-blue-400 rounded-full"><Twitter size={18}/></button>
-                    <button onClick={() => { navigator.clipboard.writeText(shareUrl); alert(t.copied); }} className="p-2 bg-gray-100 text-gray-600 hover:text-gray-900 rounded-full"><LinkIcon size={18}/></button>
+                    <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')} className="p-2 bg-gray-100 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"><Facebook size={18}/></button>
+                    <button onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`, '_blank')} className="p-2 bg-gray-100 text-gray-600 hover:text-blue-400 hover:bg-blue-50 rounded-full transition-all"><Twitter size={18}/></button>
+                    <button onClick={() => { navigator.clipboard.writeText(shareUrl); alert(t.copied); }} className="p-2 bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-full transition-all"><LinkIcon size={18}/></button>
                   </div>
                 </div>
              </div>
@@ -453,34 +453,34 @@ const App: React.FC = () => {
     };
 
     if (!adminLoggedIn) return (
-      <div className="max-w-md mx-auto py-20 px-4">
+      <div className="max-w-md mx-auto py-20 px-4 animate-in fade-in duration-300">
          <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg wp-shadow border border-gray-200">
-            <h2 className="text-2xl font-bold mb-6 text-center">{t.adminLogin}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center font-serif">{t.adminLogin}</h2>
             <div className="space-y-4">
-               <input placeholder={t.username} value={user} onChange={e => setUser(e.target.value)} className="w-full p-3 border rounded outline-none bg-white text-gray-900 border-gray-200" />
-               <input type="password" placeholder={t.password} value={pass} onChange={e => setPass(e.target.value)} className="w-full p-3 border rounded outline-none bg-white text-gray-900 border-gray-200" />
-               <button type="submit" className="w-full py-4 bg-blue-600 text-white font-bold rounded uppercase tracking-widest hover:bg-blue-700">{t.login}</button>
+               <input placeholder={t.username} value={user} onChange={e => setUser(e.target.value)} className="w-full p-3 border rounded outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" />
+               <input type="password" placeholder={t.password} value={pass} onChange={e => setPass(e.target.value)} className="w-full p-3 border rounded outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" />
+               <button type="submit" className="w-full py-4 bg-blue-600 text-white font-bold rounded uppercase tracking-widest hover:bg-blue-700 shadow-md transition-all active:scale-95">{t.login}</button>
             </div>
          </form>
       </div>
     );
 
-    if (!adminBuffer) return <div className="p-20 text-center text-gray-400">Loading...</div>;
+    if (!adminBuffer) return <div className="p-20 text-center text-gray-400">Loading Configuration...</div>;
 
     const paginatedReviews = reviews.slice((adminPage - 1) * ADMIN_PAGE_SIZE, adminPage * ADMIN_PAGE_SIZE);
     const totalPages = Math.ceil(reviews.length / ADMIN_PAGE_SIZE);
 
     return (
       <div className="max-w-6xl mx-auto py-12 px-4 space-y-12 animate-in fade-in duration-300">
-         <div className="flex justify-between items-center"><h1 className="text-3xl font-bold font-serif">{t.adminDashboard}</h1><button onClick={() => setAdminLoggedIn(false)} className="text-red-600 font-bold flex items-center uppercase text-xs tracking-widest"><LogOut size={16} className="mr-1"/> {t.logout}</button></div>
+         <div className="flex justify-between items-center"><h1 className="text-3xl font-bold font-serif">{t.adminDashboard}</h1><button onClick={() => setAdminLoggedIn(false)} className="text-red-600 font-bold flex items-center uppercase text-xs tracking-widest hover:opacity-70 transition-opacity"><LogOut size={16} className="mr-1"/> {t.logout}</button></div>
          
          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <section className="bg-white p-8 border wp-shadow rounded-sm space-y-4">
                <h3 className="text-xl font-bold flex items-center font-serif text-blue-600"><Play size={20} className="mr-2" /> {t.generateNow}</h3>
-               <button disabled={isGenerating} onClick={() => autoGenerateReview(MediaType.MOVIE)} className="w-full py-4 bg-black text-white rounded font-bold uppercase text-xs tracking-widest flex items-center justify-center">
+               <button disabled={isGenerating} onClick={() => autoGenerateReview(MediaType.MOVIE)} className="w-full py-4 bg-black text-white rounded font-bold uppercase text-xs tracking-widest flex items-center justify-center hover:bg-gray-800 transition-all disabled:opacity-50 active:scale-95">
                   {isGenerating ? <Loader2 className="animate-spin mr-2"/> : <Film className="mr-2"/>} {t.generateMovie}
                </button>
-               <button disabled={isGenerating} onClick={() => autoGenerateReview(MediaType.TV)} className="w-full py-4 bg-black text-white rounded font-bold uppercase text-xs tracking-widest flex items-center justify-center">
+               <button disabled={isGenerating} onClick={() => autoGenerateReview(MediaType.TV)} className="w-full py-4 bg-black text-white rounded font-bold uppercase text-xs tracking-widest flex items-center justify-center hover:bg-gray-800 transition-all disabled:opacity-50 active:scale-95">
                   {isGenerating ? <Loader2 className="animate-spin mr-2"/> : <Tv className="mr-2"/>} {t.generateTV}
                </button>
             </section>
@@ -500,41 +500,59 @@ const App: React.FC = () => {
                        <td className="py-4 text-gray-500 text-xs">{new Date(r.createdAt).toLocaleDateString()}</td>
                        <td className="py-4 text-xs font-medium text-blue-600">{config.authors[r.metadata.authorId]?.name[lang]}</td>
                        <td className="py-4 text-xs">
-                          <button onClick={() => { setReviews(reviews.map(rv => rv.id === r.id ? {...rv, visible: !rv.visible} : rv)); storage.setReviews(reviews.map(rv => rv.id === r.id ? {...rv, visible: !rv.visible} : rv)); }} className={`font-bold uppercase ${r.visible ? 'text-green-600' : 'text-gray-400'}`}>
+                          <button onClick={() => { 
+                            const u = reviews.map(rv => rv.id === r.id ? {...rv, visible: !rv.visible} : rv);
+                            setReviews(u); storage.setReviews(u); 
+                          }} className={`font-bold uppercase tracking-widest hover:opacity-70 transition-opacity ${r.visible ? 'text-green-600' : 'text-gray-400'}`}>
                              {r.visible ? t.show : t.hide}
                           </button>
                        </td>
                        <td className="py-4 text-right space-x-2">
-                          <button onClick={() => setEditingReview({ ...r })} className="p-2 text-blue-600 hover:bg-blue-50 rounded"><Edit2 size={16}/></button>
-                          <button onClick={() => { if(confirm('Delete?')) { setReviews(reviews.filter(rv => rv.id !== r.id)); storage.setReviews(reviews.filter(rv => rv.id !== r.id)); } }} className="p-2 text-red-600 hover:bg-red-50 rounded"><Trash2 size={16}/></button>
+                          <button onClick={() => setEditingReview({ ...r })} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"><Edit2 size={16}/></button>
+                          <button onClick={() => { if(confirm('Are you sure you want to delete this review?')) { 
+                            const u = reviews.filter(rv => rv.id !== r.id);
+                            setReviews(u); storage.setReviews(u); 
+                          } }} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"><Trash2 size={16}/></button>
                        </td>
                     </tr>
                   ))}</tbody>
                </table>
             </div>
             <div className="mt-8 flex justify-center items-center space-x-4">
-               <button onClick={() => setAdminPage(p => Math.max(1, p-1))} className="p-2 border rounded hover:bg-gray-50"><ChevronLeft size={20}/></button>
-               <span className="font-bold text-sm">{adminPage} / {totalPages || 1}</span>
-               <button onClick={() => setAdminPage(p => Math.min(totalPages, p+1))} className="p-2 border rounded hover:bg-gray-50"><ChevronRight size={20}/></button>
+               <button onClick={() => setAdminPage(p => Math.max(1, p-1))} className="p-2 border rounded hover:bg-gray-50 transition-colors"><ChevronLeft size={20}/></button>
+               <span className="font-bold text-sm text-gray-600 font-serif">{adminPage} / {totalPages || 1}</span>
+               <button onClick={() => setAdminPage(p => Math.min(totalPages, p+1))} className="p-2 border rounded hover:bg-gray-50 transition-colors"><ChevronRight size={20}/></button>
             </div>
          </section>
 
          {editingReview && (
-           <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl">
-                 <div className="flex justify-between border-b pb-2">
-                    <h2 className="text-xl font-bold font-serif">Edit Content</h2>
-                    <div className="flex space-x-1">
-                       {['en', 'zh-TW', 'zh-CN'].map((l) => (
-                         <button key={l} onClick={() => setEditLang(l as Language)} className={`px-3 py-1 text-[10px] font-bold uppercase rounded ${editLang === l ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{l}</button>
+           <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl animate-in zoom-in duration-300">
+                 <div className="flex justify-between items-center border-b pb-4">
+                    <h2 className="text-2xl font-bold font-serif">Edit Content</h2>
+                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                       {(['en', 'zh-TW', 'zh-CN'] as Language[]).map((l) => (
+                         <button key={l} onClick={() => setEditLang(l)} className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${editLang === l ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>{l}</button>
                        ))}
                     </div>
                  </div>
-                 <input className="w-full p-3 border rounded bg-white text-gray-900 border-gray-200 focus:border-blue-600 outline-none" value={editingReview.title[editLang]} onChange={e => setEditingReview({...editingReview, title: {...editingReview.title, [editLang]: e.target.value}})} />
-                 <textarea className="w-full p-3 border rounded h-64 font-serif leading-relaxed bg-white text-gray-900 border-gray-200 focus:border-blue-600 outline-none" value={editingReview.content[editLang]} onChange={e => setEditingReview({...editingReview, content: {...editingReview.content, [editLang]: e.target.value}})} />
-                 <div className="flex justify-end space-x-3 pt-4 border-t">
-                    <button onClick={() => setEditingReview(null)} className="text-gray-400 font-bold uppercase text-xs">Cancel</button>
-                    <button onClick={() => { setReviews(reviews.map(r => r.id === editingReview.id ? editingReview : r)); storage.setReviews(reviews.map(r => r.id === editingReview.id ? editingReview : r)); setEditingReview(null); }} className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold uppercase text-xs shadow hover:bg-blue-700">Save</button>
+                 <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-gray-400">Title ({editLang})</label>
+                      <input className="w-full p-3 border rounded-lg bg-white text-gray-900 border-gray-200 focus:border-blue-600 outline-none shadow-sm" value={editingReview.title[editLang]} onChange={e => setEditingReview({...editingReview, title: {...editingReview.title, [editLang]: e.target.value}})} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-gray-400">Content ({editLang})</label>
+                      <textarea className="w-full p-3 border rounded-lg h-80 font-serif leading-relaxed bg-white text-gray-900 border-gray-200 focus:border-blue-600 outline-none shadow-sm" value={editingReview.content[editLang]} onChange={e => setEditingReview({...editingReview, content: {...editingReview.content, [editLang]: e.target.value}})} />
+                    </div>
+                 </div>
+                 <div className="flex justify-end space-x-3 pt-6 border-t">
+                    <button onClick={() => setEditingReview(null)} className="text-gray-400 font-bold uppercase text-xs hover:text-gray-600 transition-colors">Cancel</button>
+                    <button onClick={() => { 
+                      const u = reviews.map(r => r.id === editingReview.id ? editingReview : r);
+                      setReviews(u); storage.setReviews(u); 
+                      setEditingReview(null); 
+                    }} className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold uppercase text-xs shadow-lg hover:bg-blue-700 transition-all active:scale-95">Save Changes</button>
                  </div>
               </div>
            </div>
@@ -544,44 +562,45 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col selection:bg-blue-100">
       <Navigation lang={lang} setLang={setLang} watchlistCount={watchlist.length} onNavigate={setCurrentPage} onOpenLottery={() => setShowLottery(true)} config={config} />
       <main className="flex-grow">
         {currentPage === 'home' && <PageHome />}
         {currentPage === 'detail' && <PageDetail />}
         {currentPage === 'watchlist' && (
-          <div className="max-w-4xl mx-auto px-4 py-12">
+          <div className="max-w-4xl mx-auto px-4 py-12 animate-in fade-in duration-500">
             <h1 className="text-3xl font-bold font-serif mb-8 flex items-center text-pink-500"><Heart className="mr-3" fill="currentColor" />{t.watchlist}</h1>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {watchlist.map(item => (
-                <div key={item.id} className="bg-white rounded-xl border wp-shadow overflow-hidden group hover:shadow-lg transition-all">
-                  <div className="relative aspect-[2/3] overflow-hidden">
-                    <img src={getImageUrl(item.posterPath, 'w342')} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="movie" />
-                    <button onClick={() => { const u = watchlist.filter(w => w.id !== item.id); setWatchlist(u); storage.setWatchlist(u); }} className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-red-600 transition-all"><X size={16} /></button>
+                <div key={item.id} className="bg-white rounded-xl border wp-shadow overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="relative aspect-[2/3] overflow-hidden cursor-pointer" onClick={() => { setSelectedReviewId(reviews.find(r => r.tmdbId === item.tmdbId)?.id || null); setCurrentPage('detail'); }}>
+                    <img src={getImageUrl(item.posterPath, 'w342')} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="movie" />
+                    <button onClick={(e) => { e.stopPropagation(); const u = watchlist.filter(w => w.id !== item.id); setWatchlist(u); storage.setWatchlist(u); }} className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-red-600 transition-all shadow-md"><X size={16} /></button>
                   </div>
-                  <div className="p-4"><h3 className="font-bold text-sm line-clamp-1">{item.title}</h3></div>
+                  <div className="p-4"><h3 className="font-bold text-sm line-clamp-1 group-hover:text-blue-600 transition-colors">{item.title}</h3></div>
                 </div>
               ))}
+              {watchlist.length === 0 && <div className="col-span-full py-20 text-center text-gray-300 italic font-serif">Your watchlist is currently empty.</div>}
             </div>
           </div>
         )}
         {currentPage === 'admin-login' && <PageAdmin />}
       </main>
       
-      <footer className="bg-white border-t pt-16 pb-12 text-center px-6">
+      <footer className="bg-white border-t pt-16 pb-12 text-center px-6 mt-auto">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-12 mb-16">
             <div className="text-left space-y-2">
-              <div className="text-3xl font-black text-blue-600 font-serif">{config.siteName}</div>
-              <p className="text-[11px] text-gray-400 font-bold tracking-widest uppercase">AI Cinematic Critic & Guide</p>
+              <div className="text-3xl font-black text-blue-600 font-serif leading-none">{config.siteName}</div>
+              <p className="text-[11px] text-gray-400 font-bold tracking-[0.2em] uppercase">AI-Powered Cinematic Guide</p>
             </div>
             
-            {/* Integrated Subscription in Footer */}
-            <div className="w-full md:w-auto bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col sm:flex-row gap-3">
+            {/* Subscription Form Completely Integrated in Footer Layout */}
+            <div className="w-full md:w-auto bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col sm:flex-row gap-3 shadow-inner">
                <input 
                   type="email" 
                   placeholder={t.emailPlaceholder} 
-                  className="px-5 py-3 text-sm rounded-full border border-gray-200 outline-none w-full sm:w-64 focus:border-blue-600 bg-white text-gray-900" 
+                  className="px-5 py-3 text-sm rounded-full border border-gray-200 outline-none w-full sm:w-64 focus:border-blue-600 bg-white text-gray-900 shadow-sm" 
                />
                <button className="bg-blue-600 text-white px-8 py-3 rounded-full font-black uppercase tracking-widest text-xs hover:bg-blue-700 transition-all flex items-center justify-center shadow-lg transform active:scale-95">
                  <Mail size={16} className="mr-2" /> {t.subscribe}
@@ -589,20 +608,27 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex space-x-8 text-gray-400">
-               <Twitter size={24} className="cursor-pointer hover:text-blue-400 transition-colors"/>
-               <Facebook size={24} className="cursor-pointer hover:text-blue-600 transition-colors"/>
-               <Mail size={24} className="cursor-pointer hover:text-red-400 transition-colors"/>
+               <Twitter size={24} className="cursor-pointer hover:text-blue-400 transition-colors duration-300"/>
+               <Facebook size={24} className="cursor-pointer hover:text-blue-600 transition-colors duration-300"/>
+               <Mail size={24} className="cursor-pointer hover:text-red-400 transition-colors duration-300"/>
             </div>
           </div>
           
-          <div className="border-t border-gray-100 pt-10 text-[10px] text-gray-300 uppercase font-black tracking-[0.2em]">
-            © {new Date().getFullYear()} {config.siteName}. DATA BY TMDB API.
+          <div className="border-t border-gray-100 pt-10 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-[10px] text-gray-300 uppercase font-black tracking-[0.2em]">
+              © {new Date().getFullYear()} {config.siteName}. DATA POWERED BY TMDB API.
+            </div>
+            <div className="flex space-x-6 text-[10px] text-gray-400 uppercase font-bold tracking-widest">
+              <button onClick={() => setCurrentPage('home')} className="hover:text-blue-600">Privacy</button>
+              <button onClick={() => setCurrentPage('home')} className="hover:text-blue-600">Terms</button>
+              <button onClick={() => setAdminLoggedIn(!adminLoggedIn)} className="hover:text-blue-600">Admin</button>
+            </div>
           </div>
         </div>
       </footer>
 
       <LotteryModal isOpen={showLottery} onClose={() => setShowLottery(false)} reviews={reviews.filter(r => r.visible)} lang={lang} onSelect={r => { setSelectedReviewId(r.id); setCurrentPage('detail'); setShowLottery(false); window.scrollTo(0,0); }} />
-      {isGenerating && <div className="fixed bottom-8 right-8 z-[100] bg-black text-white px-8 py-5 rounded-full shadow-2xl flex items-center animate-bounce border-2 border-blue-600"><Loader2 className="animate-spin mr-3" /><span className="font-black text-xs uppercase tracking-widest">Generating Content...</span></div>}
+      {isGenerating && <div className="fixed bottom-8 right-8 z-[100] bg-black text-white px-8 py-5 rounded-full shadow-2xl flex items-center animate-bounce border-2 border-blue-600"><Loader2 className="animate-spin mr-3 text-blue-400" /><span className="font-black text-xs uppercase tracking-[0.1em]">AI is analyzing cinema...</span></div>}
     </div>
   );
 };

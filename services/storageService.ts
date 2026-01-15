@@ -6,8 +6,18 @@ const CONFIG_KEY = 'my_ai_movie_config';
 const WATCHLIST_KEY = 'my_ai_movie_watchlist';
 const ADMIN_PASSWORD_KEY = 'my_ai_movie_admin_pass';
 
+const safeParse = <T>(key: string, defaultValue: T): T => {
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : defaultValue;
+  } catch (e) {
+    console.error(`Error parsing ${key} from storage:`, e);
+    return defaultValue;
+  }
+};
+
 export const storage = {
-  getReviews: (): Review[] => JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]'),
+  getReviews: (): Review[] => safeParse(REVIEWS_KEY, []),
   setReviews: (reviews: Review[]) => localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews)),
   
   getConfig: (): AppConfig => {
@@ -38,7 +48,7 @@ export const storage = {
   },
   setConfig: (config: AppConfig) => localStorage.setItem(CONFIG_KEY, JSON.stringify(config)),
   
-  getWatchlist: (): WatchlistItem[] => JSON.parse(localStorage.getItem(WATCHLIST_KEY) || '[]'),
+  getWatchlist: (): WatchlistItem[] => safeParse(WATCHLIST_KEY, []),
   setWatchlist: (list: WatchlistItem[]) => localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list)),
 
   getAdminPassword: () => localStorage.getItem(ADMIN_PASSWORD_KEY) || 'admin',
