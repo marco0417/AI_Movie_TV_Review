@@ -39,11 +39,17 @@ export async function generateHumorousReview(
       config: {
         temperature: 0.9,
         topP: 0.95,
+        thinkingConfig: { thinkingBudget: 0 } // Flash doesn't need much thinking for short reviews
       }
     });
-    return response.text || "Failed to generate review.";
-  } catch (error) {
+
+    const text = response.text;
+    if (!text) {
+        throw new Error("Gemini returned empty response.");
+    }
+    return text;
+  } catch (error: any) {
     console.error("Gemini Error:", error);
-    return "Generation Error: Make sure your API key is valid.";
+    throw new Error(`AI Generation failed: ${error.message || 'Unknown Error'}`);
   }
 }

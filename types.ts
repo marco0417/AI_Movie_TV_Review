@@ -47,7 +47,6 @@ export interface Review {
 
 export interface AppConfig {
   tmdbApiKey: string;
-  geminiApiKey: string;
   updateTime: string;
   lastUpdateDate: string;
   siteName: string;

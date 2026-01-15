@@ -1,5 +1,5 @@
 
-import { Review, AppConfig, WatchlistItem } from '../types';
+import { Review, AppConfig, WatchlistItem } from './types';
 
 const REVIEWS_KEY = 'my_ai_movie_reviews';
 const CONFIG_KEY = 'my_ai_movie_config';
@@ -23,7 +23,6 @@ export const storage = {
   getConfig: (): AppConfig => {
     const defaultBot: AppConfig = {
       tmdbApiKey: '',
-      // geminiApiKey was removed as it is not part of AppConfig and the SDK uses process.env.API_KEY
       updateTime: '01:00',
       lastUpdateDate: new Date(0).toISOString(),
       siteName: 'My AI Movie Review',

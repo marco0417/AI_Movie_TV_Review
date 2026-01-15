@@ -14,17 +14,17 @@ import {
   Plus, Check, LogOut, Settings as SettingsIcon, 
   Play, RefreshCw, Loader2, Heart, X, Trash2, Edit2, ChevronLeft,
   Share2, Facebook, Twitter, Link as LinkIcon, Save,
-  UserCircle, Calendar, ChevronRight
+  UserCircle, Calendar, ChevronRight, Lock
 } from 'lucide-react';
 
 const ADMIN_PAGE_SIZE = 10;
 
-// Stable Sub-component for Admin Settings
-const AdminSettings = ({ buffer, setBuffer, t, onSave }: any) => (
+// Sub-component for Admin Settings - Moved outside to prevent focus reset
+const AdminSettings = ({ buffer, setBuffer, t, onSave, adminPass, setAdminPass }: any) => (
   <section className="bg-white p-6 sm:p-8 border wp-shadow rounded-sm space-y-6 md:col-span-2">
     <div className="flex justify-between items-center">
       <h3 className="text-xl font-bold flex items-center font-serif text-blue-600"><SettingsIcon className="mr-2" /> {t.siteSettings}</h3>
-      <button onClick={onSave} className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest flex items-center hover:bg-blue-700 shadow-md">
+      <button onClick={onSave} className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest flex items-center hover:bg-blue-700 shadow-md transition-transform active:scale-95">
         <Save size={14} className="mr-2" /> {t.save}
       </button>
     </div>
@@ -46,6 +46,18 @@ const AdminSettings = ({ buffer, setBuffer, t, onSave }: any) => (
           onChange={e => setBuffer({...buffer, tmdbApiKey: e.target.value})} 
           className="w-full p-2.5 border rounded font-mono outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" 
         />
+      </div>
+      <div className="space-y-1">
+        <label className="text-[10px] font-black uppercase text-gray-400">Admin Password</label>
+        <div className="relative">
+          <input 
+            value={adminPass} 
+            type="text" 
+            onChange={e => setAdminPass(e.target.value)} 
+            className="w-full p-2.5 pl-9 border rounded font-mono outline-none bg-white text-gray-900 border-gray-200 focus:border-blue-600" 
+          />
+          <Lock className="absolute left-3 top-3 text-gray-300" size={16} />
+        </div>
       </div>
       <div className="space-y-1">
         <label className="text-[10px] font-black uppercase text-gray-400">Daily Update Time</label>
@@ -104,6 +116,7 @@ const App: React.FC = () => {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminPage, setAdminPage] = useState(1);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [adminPassBuffer, setAdminPassBuffer] = useState<string>(storage.getAdminPassword());
   
   const [filterRegion, setFilterRegion] = useState<string | null>(null);
   const [filterYear, setFilterYear] = useState<number | null>(null);
@@ -134,27 +147,44 @@ const App: React.FC = () => {
   }, [config, reviews]);
 
   const autoGenerateReview = async (type: MediaType) => {
-    if (!config.tmdbApiKey) return;
+    if (!config.tmdbApiKey) {
+        alert("Please set TMDB API Key in site settings first.");
+        return;
+    }
     setIsGenerating(true);
     try {
       const activeAuthor = config.authors[config.activeAuthorIndex];
       const trending = await fetchTrending(config.tmdbApiKey, type);
+      
+      if (!trending || trending.length === 0) {
+        throw new Error("Failed to fetch trending data from TMDB. Check your API Key.");
+      }
+
       const existingIds = reviews.map(r => r.tmdbId);
       const target = trending.find((item: any) => !existingIds.includes(item.id)) || trending[0];
       
-      const detailEN = await fetchDetails(config.tmdbApiKey, type, target.id, 'en-US');
-      const detailTW = await fetchDetails(config.tmdbApiKey, type, target.id, 'zh-TW');
-      const detailCN = await fetchDetails(config.tmdbApiKey, type, target.id, 'zh-CN');
+      const [detailEN, detailTW, detailCN] = await Promise.all([
+        fetchDetails(config.tmdbApiKey, type, target.id, 'en-US'),
+        fetchDetails(config.tmdbApiKey, type, target.id, 'zh-TW'),
+        fetchDetails(config.tmdbApiKey, type, target.id, 'zh-CN')
+      ]);
 
+      if (!detailEN || detailEN.success === false) {
+        throw new Error(detailEN?.status_message || "Failed to fetch details from TMDB.");
+      }
+
+      // Check for Seasons if TV
       if (type === MediaType.TV && detailEN.seasons && detailEN.seasons.length > 0) {
         const existingReviews = reviews.filter(r => r.tmdbId === target.id);
         const reviewedSeasons = existingReviews.map(r => r.seasonNumber).filter(s => s !== undefined);
         const nextSeason = detailEN.seasons.find((s: any) => s.season_number > 0 && !reviewedSeasons.includes(s.season_number));
         
         if (nextSeason) {
-          const reviewEN = await generateHumorousReview(`${detailEN.name} Season ${nextSeason.season_number}`, type, 'en', nextSeason.overview || detailEN.overview, activeAuthor.style);
-          const reviewTW = await generateHumorousReview(`${detailTW.name} 第 ${nextSeason.season_number} 季`, type, 'zh-TW', nextSeason.overview || detailTW.overview, activeAuthor.style);
-          const reviewCN = await generateHumorousReview(`${detailCN.name} 第 ${nextSeason.season_number} 季`, type, 'zh-CN', nextSeason.overview || detailCN.overview, activeAuthor.style);
+          const [reviewEN, reviewTW, reviewCN] = await Promise.all([
+            generateHumorousReview(`${detailEN.name} Season ${nextSeason.season_number}`, type, 'en', nextSeason.overview || detailEN.overview, activeAuthor.style),
+            generateHumorousReview(`${detailTW.name} 第 ${nextSeason.season_number} 季`, type, 'zh-TW', nextSeason.overview || detailTW.overview, activeAuthor.style),
+            generateHumorousReview(`${detailCN.name} 第 ${nextSeason.season_number} 季`, type, 'zh-CN', nextSeason.overview || detailCN.overview, activeAuthor.style)
+          ]);
 
           const newReview: Review = {
             id: Date.now().toString(),
@@ -171,18 +201,22 @@ const App: React.FC = () => {
             content: { 'en': reviewEN, 'zh-TW': reviewTW, 'zh-CN': reviewCN },
             createdAt: new Date().toISOString(),
             genres: detailEN.genres.map((g: any) => g.name),
-            releaseYear: new Date(nextSeason.air_date || detailEN.first_air_date).getFullYear(),
+            releaseYear: new Date(nextSeason.air_date || detailEN.first_air_date || Date.now()).getFullYear(),
             region: detailEN.production_countries?.[0]?.iso_3166_1 || 'US',
             visible: true,
-            ratings: { tmdb: Math.round(detailEN.vote_average * 10) / 10, imdb: 7.8, douban: 8.4 },
+            ratings: { 
+              tmdb: Math.round(detailEN.vote_average * 10) / 10 || 0, 
+              imdb: 7.5, // Mock default or fetch if available
+              douban: 8.0 // Mock default
+            },
             externalIds: {
               imdb: detailEN.external_ids?.imdb_id,
               tmdb: String(target.id),
               douban: `https://movie.douban.com/subject_search?search_text=${encodeURIComponent(detailCN.name)}`
             },
             metadata: {
-              duration: `${detailEN.number_of_episodes} Episodes`,
-              director: detailEN.credits?.crew?.find((c: any) => c.job === 'Director' || c.job === 'Producer')?.name || 'Various',
+              duration: `${detailEN.number_of_episodes || 0} Episodes`,
+              director: detailEN.credits?.crew?.find((c: any) => c.job === 'Director' || c.job === 'Executive Producer')?.name || 'Various',
               actors: detailEN.credits?.cast?.slice(0, 5).map((a: any) => a.name) || [],
               authorId: config.activeAuthorIndex,
               authorStyle: activeAuthor.style
@@ -195,9 +229,12 @@ const App: React.FC = () => {
         }
       }
 
-      const reviewEN = await generateHumorousReview(detailEN.title || detailEN.name, type, 'en', detailEN.overview, activeAuthor.style);
-      const reviewTW = await generateHumorousReview(detailTW.title || detailTW.name, type, 'zh-TW', detailTW.overview, activeAuthor.style);
-      const reviewCN = await generateHumorousReview(detailCN.title || detailCN.name, type, 'zh-CN', detailCN.overview, activeAuthor.style);
+      // Normal single title generation
+      const [reviewEN, reviewTW, reviewCN] = await Promise.all([
+        generateHumorousReview(detailEN.title || detailEN.name, type, 'en', detailEN.overview, activeAuthor.style),
+        generateHumorousReview(detailTW.title || detailTW.name, type, 'zh-TW', detailTW.overview, activeAuthor.style),
+        generateHumorousReview(detailCN.title || detailCN.name, type, 'zh-CN', detailCN.overview, activeAuthor.style)
+      ]);
 
       const newReview: Review = {
         id: Date.now().toString(),
@@ -209,17 +246,21 @@ const App: React.FC = () => {
         content: { 'en': reviewEN, 'zh-TW': reviewTW, 'zh-CN': reviewCN },
         createdAt: new Date().toISOString(),
         genres: detailEN.genres.map((g: any) => g.name),
-        releaseYear: new Date(detailEN.release_date || detailEN.first_air_date).getFullYear(),
+        releaseYear: new Date(detailEN.release_date || detailEN.first_air_date || Date.now()).getFullYear(),
         region: detailEN.production_countries?.[0]?.iso_3166_1 || 'US',
         visible: true,
-        ratings: { tmdb: Math.round(detailEN.vote_average * 10) / 10, imdb: 7.8, douban: 8.4 },
+        ratings: { 
+          tmdb: Math.round(detailEN.vote_average * 10) / 10 || 0, 
+          imdb: 7.5, 
+          douban: 8.0 
+        },
         externalIds: {
           imdb: detailEN.external_ids?.imdb_id,
           tmdb: String(target.id),
           douban: `https://movie.douban.com/subject_search?search_text=${encodeURIComponent(detailCN.name)}`
         },
         metadata: {
-          duration: type === MediaType.MOVIE ? `${detailEN.runtime} min` : `${detailEN.number_of_seasons} Seasons`,
+          duration: type === MediaType.MOVIE ? `${detailEN.runtime || 0} min` : `${detailEN.number_of_seasons || 0} Seasons`,
           director: detailEN.credits?.crew?.find((c: any) => c.job === 'Director' || c.job === 'Producer')?.name || 'Various',
           actors: detailEN.credits?.cast?.slice(0, 5).map((a: any) => a.name) || [],
           authorId: config.activeAuthorIndex,
@@ -229,7 +270,12 @@ const App: React.FC = () => {
       const updated = [newReview, ...reviews];
       setReviews(updated);
       storage.setReviews(updated);
-    } catch (err) { console.error(err); } finally { setIsGenerating(false); }
+    } catch (err: any) { 
+      console.error("Generation failed:", err);
+      alert(`Generation failed: ${err.message}`); 
+    } finally { 
+      setIsGenerating(false); 
+    }
   };
 
   const filteredReviews = useMemo(() => {
@@ -449,6 +495,7 @@ const App: React.FC = () => {
       if (!adminBuffer) return;
       setConfig(adminBuffer);
       storage.setConfig(adminBuffer);
+      storage.setAdminPassword(adminPassBuffer);
       alert(t.saveSettings + ' Success!');
     };
 
@@ -485,7 +532,7 @@ const App: React.FC = () => {
                </button>
             </section>
 
-            <AdminSettings buffer={adminBuffer} setBuffer={setAdminBuffer} t={t} onSave={handleSaveSettings} />
+            <AdminSettings buffer={adminBuffer} setBuffer={setAdminBuffer} t={t} onSave={handleSaveSettings} adminPass={adminPassBuffer} setAdminPass={setAdminPassBuffer} />
          </div>
 
          <section className="bg-white p-8 border wp-shadow rounded-sm">
@@ -595,7 +642,6 @@ const App: React.FC = () => {
               <p className="text-[11px] text-gray-400 font-bold tracking-[0.2em] uppercase">AI-Powered Cinematic Guide</p>
             </div>
             
-            {/* Subscription Form Completely Integrated in Footer Layout */}
             <div className="w-full md:w-auto bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col sm:flex-row gap-3 shadow-inner">
                <input 
                   type="email" 
